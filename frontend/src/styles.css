@@ -1,0 +1,95 @@
+:root {
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #1f2937;
+  background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  padding: 1rem;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d7e2f2;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.muted {
+  color: #4b5563;
+}
+
+.controls {
+  display: grid;
+  gap: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: #1d4ed8;
+  color: white;
+  border: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.subtitle-box {
+  border: 1px dashed #c7d2fe;
+  background: #eef2ff;
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.turns {
+  display: grid;
+  gap: 0.45rem;
+  padding-left: 1rem;
+}
+
+.turns li.active {
+  background: #dbeafe;
+  border-radius: 8px;
+  padding: 0.4rem;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 600;
+}
