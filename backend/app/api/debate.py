@@ -4,7 +4,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.elevenlabs_client import synthesize_speech_mp3_base64
+from app.services.elevenlabs_client import list_voices, synthesize_speech_mp3_base64
 from app.services.xai_client import generate_debate_turns
 
 router = APIRouter(tags=["debate"])
@@ -15,6 +15,8 @@ class DebateRequest(BaseModel):
     persona_a: str = Field(..., min_length=2, max_length=80)
     persona_b: str = Field(..., min_length=2, max_length=80)
     turns: int = Field(6, ge=2, le=20)
+    persona_a_voice_id: str | None = Field(default=None, min_length=2, max_length=100)
+    persona_b_voice_id: str | None = Field(default=None, min_length=2, max_length=100)
 
 
 class DebateTurnResponse(BaseModel):
@@ -27,6 +29,25 @@ class DebateTurnResponse(BaseModel):
 class DebateResponse(BaseModel):
     topic: str
     turns: list[DebateTurnResponse]
+
+
+class VoiceResponse(BaseModel):
+    voice_id: str
+    name: str
+
+
+class VoicesListResponse(BaseModel):
+    voices: list[VoiceResponse]
+
+
+@router.get("/voices", response_model=VoicesListResponse)
+async def voices() -> VoicesListResponse:
+    try:
+        raw_voices = await list_voices()
+    except (httpx.HTTPError, RuntimeError) as exc:
+        raise HTTPException(status_code=502, detail=f"Voices fetch failed: {exc}") from exc
+
+    return VoicesListResponse(voices=[VoiceResponse(**v) for v in raw_voices])
 
 
 @router.post("/debate", response_model=DebateResponse)
@@ -43,8 +64,14 @@ async def debate(payload: DebateRequest) -> DebateResponse:
 
     turns: list[DebateTurnResponse] = []
     for turn in debate_turns:
+        voice_id = (
+            payload.persona_a_voice_id
+            if turn["speaker"] == "persona_a"
+            else payload.persona_b_voice_id
+        )
+
         try:
-            audio_base64 = await synthesize_speech_mp3_base64(turn["text"])
+            audio_base64 = await synthesize_speech_mp3_base64(turn["text"], voice_id=voice_id)
         except (httpx.HTTPError, RuntimeError) as exc:
             raise HTTPException(status_code=502, detail=f"TTS failed: {exc}") from exc
 
