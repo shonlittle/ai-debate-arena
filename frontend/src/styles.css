@@ -93,3 +93,34 @@ button:disabled {
   color: #b91c1c;
   font-weight: 600;
 }
+
+.progress-box {
+  margin-top: 0.85rem;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+.progress-title {
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.progress-bar {
+  height: 8px;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #93c5fd 0%, #1d4ed8 50%, #93c5fd 100%);
+  background-size: 200% 100%;
+  animation: progress-shift 1.4s linear infinite;
+}
+
+@keyframes progress-shift {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}

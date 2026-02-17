@@ -17,6 +17,7 @@ export default function App() {
   const [voicesLoading, setVoicesLoading] = useState(true);
 
   const [loading, setLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [debate, setDebate] = useState<DebateResponse | null>(null);
 
@@ -76,6 +77,34 @@ export default function App() {
     }
     return debate.turns[currentTurn]?.text ?? '';
   }, [debate, currentTurn]);
+
+  const loadingStatus = useMemo(() => {
+    if (!loading) {
+      return '';
+    }
+    if (loadingSeconds < 3) {
+      return 'Generating debate script...';
+    }
+    if (loadingSeconds < 9) {
+      return 'Synthesizing voice audio...';
+    }
+    return 'Finalizing response payload...';
+  }, [loading, loadingSeconds]);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingSeconds(0);
+      return;
+    }
+
+    const timerId = window.setInterval(() => {
+      setLoadingSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [loading]);
 
   async function generateDebate(event: FormEvent) {
     event.preventDefault();
@@ -205,6 +234,14 @@ export default function App() {
             {loading ? 'Generating...' : 'Generate Debate'}
           </button>
         </form>
+
+        {loading ? (
+          <div className="progress-box">
+            <p className="progress-title">{loadingStatus}</p>
+            <div className="progress-bar" aria-hidden="true" />
+            <p className="muted">Elapsed: {loadingSeconds}s</p>
+          </div>
+        ) : null}
 
         {voicesLoading ? <p className="muted">Loading voices...</p> : null}
         {error ? <p className="error">{error}</p> : null}
