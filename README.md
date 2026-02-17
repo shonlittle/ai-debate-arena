@@ -71,6 +71,22 @@ npm run dev
 
 Frontend runs at `http://localhost:5173` and calls backend URL from `VITE_API_BASE_URL`.
 
+## Docker Compose
+
+Run both services with Docker:
+
+```bash
+docker compose up --build
+```
+
+Host URLs:
+- Frontend: `http://localhost:5174`
+- Backend API: `http://localhost:8001`
+
+Why these ports:
+- `8000` is already in use on this machine, so compose maps backend to `8001:8000`.
+- `5174` is used for frontend to avoid interfering with any local Vite session.
+
 ## Lint / Format
 
 Backend (from `backend/`):
