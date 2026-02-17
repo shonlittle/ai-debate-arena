@@ -1,125 +1,90 @@
 # ai-debate-arena
 
-Minimal full-stack MVP for generating and playing an AI debate script.
+AI Debate Arena MVP backend built with FastAPI, using xAI (Grok via `LLM_PROVIDER`) for debate text and ElevenLabs for TTS.
 
-## Stack
-- Backend: FastAPI (Python)
-- Frontend: React + Vite (TypeScript)
-
-## Project Structure
+## Backend Structure
 
 ```text
 backend/
-  app/main.py
-  app/api/debate.py
+  app/
+    api/debate.py
+    core/config.py
+    services/xai_client.py
+    services/elevenlabs_client.py
+    main.py
+  tests/test_debate_api.py
   requirements.txt
   .env.example
-  tests/test_debate_api.py
-
-frontend/
-  src/
-  package.json
-  .env.example
-
-README.md
 ```
 
-## Features (MVP)
-1. User provides topic, two personas, and debate length.
-2. Backend generates a debate script (placeholder LLM logic).
-3. Backend adds per-turn placeholder TTS audio (base64 WAV, ElevenLabs-ready integration point).
-4. Frontend plays turns sequentially and shows subtitles.
+## Environment
 
-## Prerequisites
-- Python 3.11+
-- Node.js 18+
+Create runtime env file from template:
 
-## Backend Setup
+```bash
+cd backend
+cp .env.example .env
+```
+
+Required vars in `backend/.env`:
+- `LLM_PROVIDER` (example: `grok-4-fast-non-reasoning`)
+- `XAI_API_KEY`
+- `ELEVENLABS_API_KEY`
+- `ELEVENLABS_VOICE_ID` (default voice preset provided)
+
+`backend/.env.example` is template-only and contains no secrets.
+
+## Run Backend Locally
 
 ```bash
 cd backend
 python3 -m venv ../.venv
 source ../.venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Note: `.env.example` is a template only. Runtime configuration is read from `backend/.env`.
+Health check:
 
-Health check: `GET http://localhost:8000/health`
+```bash
+curl http://localhost:8000/health
+```
 
-Generate endpoint: `POST http://localhost:8000/api/debate/generate`
+Debate endpoint:
 
-Example payload:
+```bash
+curl -X POST http://localhost:8000/api/debate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Should cities ban private cars downtown?",
+    "persona_a": "Scientist",
+    "persona_b": "Economist",
+    "turns": 6
+  }'
+```
+
+Response shape:
 
 ```json
 {
-  "topic": "Should schools adopt AI tutors?",
-  "persona_a": "Scientist",
-  "persona_b": "Philosopher",
-  "turns": 6
+  "topic": "...",
+  "turns": [
+    {
+      "speaker": "persona_a",
+      "text": "...",
+      "audio_format": "mp3",
+      "audio_base64": "..."
+    }
+  ]
 }
-```
-
-## Frontend Setup
-
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-Frontend runs at `http://localhost:5173` and calls backend URL from `VITE_API_BASE_URL`.
-Note: `.env.example` is a template only. Vite reads values from `frontend/.env`.
-
-## Docker Compose
-
-Run both services with Docker:
-
-```bash
-docker compose up --build
-```
-
-Host URLs:
-- Frontend: `http://localhost:5174`
-- Backend API: `http://localhost:8001`
-
-Why these ports:
-- `8000` is already in use on this machine, so compose maps backend to `8001:8000`.
-- `5174` is used for frontend to avoid interfering with any local Vite session.
-- Compose reads `backend/.env` and `frontend/.env` (not `.env.example`).
-
-## Lint / Format
-
-Backend (from `backend/`):
-
-```bash
-source ../.venv/bin/activate
-ruff check .
-black --check .
-```
-
-Frontend (from `frontend/`):
-
-```bash
-npm run lint
-npm run format
 ```
 
 ## Test
 
-From `backend/`:
-
 ```bash
+cd backend
 source ../.venv/bin/activate
 pytest -q
 ```
 
-The included test validates that `/api/debate/generate` returns the expected response structure.
-
-## Notes on Integrations
-- LLM generation is currently a placeholder in `backend/app/api/debate.py` (`_llm_generate_script_placeholder`).
-- ElevenLabs TTS is currently a placeholder tone generator in `backend/app/api/debate.py` (`_tts_placeholder`).
-- Replace these two functions with real provider calls when credentials and provider SDK/API details are available.
+The test mocks xAI and ElevenLabs calls and validates `/api/debate` response structure and base64 audio fields.
