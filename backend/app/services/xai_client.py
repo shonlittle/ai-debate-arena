@@ -7,6 +7,7 @@ from pydantic import BaseModel, ValidationError
 from app.core.config import get_settings
 
 XAI_CHAT_COMPLETIONS_URL = "https://api.x.ai/v1/chat/completions"
+OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 class _TurnModel(BaseModel):
@@ -65,18 +66,29 @@ async def generate_debate_turns(
     turns: int,
 ) -> list[dict[str, str]]:
     settings = get_settings()
-    if not settings.xai_api_key:
-        raise RuntimeError("Missing XAI_API_KEY")
-
-    headers = {
-        "Authorization": f"Bearer {settings.xai_api_key}",
-        "Content-Type": "application/json",
-    }
+    if settings.llm_provider == "openrouter":
+        if not settings.openrouter_api_key:
+            raise RuntimeError("Missing OPENROUTER_API_KEY")
+        endpoint = OPENROUTER_CHAT_COMPLETIONS_URL
+        headers = {
+            "Authorization": f"Bearer {settings.openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8000",
+            "X-Title": "ai-debate-arena",
+        }
+    else:
+        if not settings.xai_api_key:
+            raise RuntimeError("Missing XAI_API_KEY")
+        endpoint = XAI_CHAT_COMPLETIONS_URL
+        headers = {
+            "Authorization": f"Bearer {settings.xai_api_key}",
+            "Content-Type": "application/json",
+        }
 
     async with httpx.AsyncClient(timeout=45.0) as client:
         for attempt in range(2):
             payload: dict[str, Any] = {
-                "model": settings.llm_provider,
+                "model": settings.llm_model,
                 "temperature": 0.7,
                 "response_format": {"type": "json_object"},
                 "messages": [
@@ -100,7 +112,7 @@ async def generate_debate_turns(
             }
 
             response = await client.post(
-                XAI_CHAT_COMPLETIONS_URL,
+                endpoint,
                 headers=headers,
                 json=payload,
             )
@@ -120,6 +132,7 @@ async def generate_debate_turns(
                 ValueError,
             ):
                 if attempt == 1:
-                    raise RuntimeError("xAI returned invalid debate JSON")
+                    provider = "OpenRouter" if settings.llm_provider == "openrouter" else "xAI"
+                    raise RuntimeError(f"{provider} returned invalid debate JSON")
 
-    raise RuntimeError("xAI debate generation failed")
+    raise RuntimeError("LLM debate generation failed")
