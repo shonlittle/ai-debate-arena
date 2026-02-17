@@ -45,6 +45,8 @@ cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Note: `.env.example` is a template only. Runtime configuration is read from `backend/.env`.
+
 Health check: `GET http://localhost:8000/health`
 
 Generate endpoint: `POST http://localhost:8000/api/debate/generate`
@@ -70,6 +72,7 @@ npm run dev
 ```
 
 Frontend runs at `http://localhost:5173` and calls backend URL from `VITE_API_BASE_URL`.
+Note: `.env.example` is a template only. Vite reads values from `frontend/.env`.
 
 ## Docker Compose
 
@@ -86,6 +89,7 @@ Host URLs:
 Why these ports:
 - `8000` is already in use on this machine, so compose maps backend to `8001:8000`.
 - `5174` is used for frontend to avoid interfering with any local Vite session.
+- Compose reads `backend/.env` and `frontend/.env` (not `.env.example`).
 
 ## Lint / Format
 
