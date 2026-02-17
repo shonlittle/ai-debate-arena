@@ -60,10 +60,18 @@ curl -X POST http://localhost:8000/api/debate \
   -H "Content-Type: application/json" \
   -d '{
     "topic": "Should cities ban private cars downtown?",
-    "persona_a": "Scientist",
-    "persona_b": "Economist",
-    "turns": 6
+    "persona_a": "Voice A Name",
+    "persona_b": "Voice B Name",
+    "turns": 6,
+    "persona_a_voice_id": "voice-id-a",
+    "persona_b_voice_id": "voice-id-b"
   }'
+```
+
+Voices endpoint:
+
+```bash
+curl http://localhost:8000/api/voices
 ```
 
 Response shape:
