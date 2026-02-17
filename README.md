@@ -1,6 +1,6 @@
 # ai-debate-arena
 
-AI Debate Arena MVP backend built with FastAPI, using xAI (Grok via `LLM_PROVIDER`) for debate text and ElevenLabs for TTS.
+AI Debate Arena MVP backend built with FastAPI, using xAI or OpenRouter for debate text and ElevenLabs for TTS.
 
 ## Backend Structure
 
@@ -27,12 +27,15 @@ cp .env.example .env
 ```
 
 Required vars in `backend/.env`:
-- `LLM_PROVIDER` (example: `grok-4-fast-non-reasoning`)
+- `LLM_PROVIDER` (`xai` or `openrouter`; backward-compatible with direct xAI model name)
+- `LLM_MODEL` (model id used by the selected provider)
 - `XAI_API_KEY`
+- `OPENROUTER_API_KEY`
 - `ELEVENLABS_API_KEY`
 - `ELEVENLABS_VOICE_ID` (default voice preset provided)
 
 `backend/.env.example` is template-only and contains no secrets.
+Use `XAI_API_KEY` when `LLM_PROVIDER=xai`; use `OPENROUTER_API_KEY` when `LLM_PROVIDER=openrouter`.
 
 ## Run Backend Locally
 
