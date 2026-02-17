@@ -3,6 +3,8 @@ export type DebateRequest = {
   persona_a: string;
   persona_b: string;
   turns: number;
+  persona_a_voice_id?: string;
+  persona_b_voice_id?: string;
 };
 
 export type DebateTurn = {
@@ -15,4 +17,13 @@ export type DebateTurn = {
 export type DebateResponse = {
   topic: string;
   turns: DebateTurn[];
+};
+
+export type Voice = {
+  voice_id: string;
+  name: string;
+};
+
+export type VoicesResponse = {
+  voices: Voice[];
 };

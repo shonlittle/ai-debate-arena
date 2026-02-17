@@ -1,7 +1,5 @@
-import { FormEvent, useMemo, useRef, useState } from 'react';
-import type { DebateRequest, DebateResponse, DebateTurn } from './types';
-
-const PERSONAS = ['Scientist', 'Philosopher', 'Economist', 'Historian', 'Optimist'];
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import type { DebateRequest, DebateResponse, DebateTurn, Voice, VoicesResponse } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -11,9 +9,12 @@ function toDataUrl(turn: DebateTurn): string {
 
 export default function App() {
   const [topic, setTopic] = useState('Will AI improve education outcomes in the next decade?');
-  const [personaA, setPersonaA] = useState(PERSONAS[0]);
-  const [personaB, setPersonaB] = useState(PERSONAS[2]);
   const [turnCount, setTurnCount] = useState(6);
+
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [personaAVoiceId, setPersonaAVoiceId] = useState('');
+  const [personaBVoiceId, setPersonaBVoiceId] = useState('');
+  const [voicesLoading, setVoicesLoading] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,52 @@ export default function App() {
   const [currentTurn, setCurrentTurn] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const canGenerate = topic.trim().length > 2 && personaA !== personaB;
+  useEffect(() => {
+    void (async () => {
+      try {
+        setVoicesLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/voices`);
+        if (!response.ok) {
+          throw new Error(`Voices request failed with ${response.status}`);
+        }
+
+        const data = (await response.json()) as VoicesResponse;
+        const loadedVoices = data.voices ?? [];
+        setVoices(loadedVoices);
+
+        if (loadedVoices.length >= 2) {
+          setPersonaAVoiceId(loadedVoices[0].voice_id);
+          setPersonaBVoiceId(loadedVoices[1].voice_id);
+        } else if (loadedVoices.length === 1) {
+          setPersonaAVoiceId(loadedVoices[0].voice_id);
+          setPersonaBVoiceId(loadedVoices[0].voice_id);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(`Unable to load voices: ${message}`);
+      } finally {
+        setVoicesLoading(false);
+      }
+    })();
+  }, []);
+
+  const personaAName = useMemo(
+    () => voices.find((v) => v.voice_id === personaAVoiceId)?.name ?? 'Persona A',
+    [voices, personaAVoiceId],
+  );
+
+  const personaBName = useMemo(
+    () => voices.find((v) => v.voice_id === personaBVoiceId)?.name ?? 'Persona B',
+    [voices, personaBVoiceId],
+  );
+
+  const canGenerate =
+    topic.trim().length > 2 &&
+    !voicesLoading &&
+    voices.length > 0 &&
+    personaAVoiceId.length > 0 &&
+    personaBVoiceId.length > 0 &&
+    personaAVoiceId !== personaBVoiceId;
 
   const currentSubtitle = useMemo(() => {
     if (!debate || currentTurn === null) {
@@ -34,7 +80,7 @@ export default function App() {
   async function generateDebate(event: FormEvent) {
     event.preventDefault();
     if (!canGenerate) {
-      setError('Enter a valid topic and choose two different personas.');
+      setError('Enter a valid topic and choose two different voices.');
       return;
     }
 
@@ -46,9 +92,11 @@ export default function App() {
 
     const payload: DebateRequest = {
       topic: topic.trim(),
-      persona_a: personaA,
-      persona_b: personaB,
+      persona_a: personaAName,
+      persona_b: personaBName,
       turns: turnCount,
+      persona_a_voice_id: personaAVoiceId,
+      persona_b_voice_id: personaBVoiceId,
     };
 
     try {
@@ -59,7 +107,8 @@ export default function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`Request failed with ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`${response.status}: ${errorText}`);
       }
 
       const data = (await response.json()) as DebateResponse;
@@ -105,7 +154,7 @@ export default function App() {
     <main className="app-shell">
       <section className="panel">
         <h1>AI Debate Arena</h1>
-        <p className="muted">Generate a scripted audio debate between two personas.</p>
+        <p className="muted">Generate a scripted audio debate between two ElevenLabs voices.</p>
 
         <form onSubmit={generateDebate} className="controls">
           <label>
@@ -119,22 +168,22 @@ export default function App() {
           </label>
 
           <label>
-            Persona A
-            <select value={personaA} onChange={(e) => setPersonaA(e.target.value)}>
-              {PERSONAS.map((persona) => (
-                <option key={`a-${persona}`} value={persona}>
-                  {persona}
+            Persona A Voice
+            <select value={personaAVoiceId} onChange={(e) => setPersonaAVoiceId(e.target.value)}>
+              {voices.map((voice) => (
+                <option key={`a-${voice.voice_id}`} value={voice.voice_id}>
+                  {voice.name}
                 </option>
               ))}
             </select>
           </label>
 
           <label>
-            Persona B
-            <select value={personaB} onChange={(e) => setPersonaB(e.target.value)}>
-              {PERSONAS.map((persona) => (
-                <option key={`b-${persona}`} value={persona}>
-                  {persona}
+            Persona B Voice
+            <select value={personaBVoiceId} onChange={(e) => setPersonaBVoiceId(e.target.value)}>
+              {voices.map((voice) => (
+                <option key={`b-${voice.voice_id}`} value={voice.voice_id}>
+                  {voice.name}
                 </option>
               ))}
             </select>
@@ -157,6 +206,7 @@ export default function App() {
           </button>
         </form>
 
+        {voicesLoading ? <p className="muted">Loading voices...</p> : null}
         {error ? <p className="error">{error}</p> : null}
       </section>
 
@@ -188,7 +238,7 @@ export default function App() {
           <ol className="turns">
             {(debate?.turns ?? []).map((turn, idx) => (
               <li key={`${idx}-${turn.speaker}`} className={idx === currentTurn ? 'active' : ''}>
-                <strong>{turn.speaker}</strong>: {turn.text}
+                <strong>{turn.speaker === 'persona_a' ? personaAName : personaBName}</strong>: {turn.text}
               </li>
             ))}
           </ol>
