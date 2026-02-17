@@ -6,7 +6,7 @@ const PERSONAS = ['Scientist', 'Philosopher', 'Economist', 'Historian', 'Optimis
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 function toDataUrl(turn: DebateTurn): string {
-  return `data:${turn.audio_mime_type};base64,${turn.audio_base64}`;
+  return `data:audio/${turn.audio_format};base64,${turn.audio_base64}`;
 }
 
 export default function App() {
@@ -52,7 +52,7 @@ export default function App() {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/debate/generate`, {
+      const response = await fetch(`${API_BASE_URL}/api/debate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -187,8 +187,8 @@ export default function App() {
           <h3>Turns</h3>
           <ol className="turns">
             {(debate?.turns ?? []).map((turn, idx) => (
-              <li key={`${turn.turn_index}-${turn.persona}`} className={idx === currentTurn ? 'active' : ''}>
-                <strong>{turn.persona}</strong>: {turn.text}
+              <li key={`${idx}-${turn.speaker}`} className={idx === currentTurn ? 'active' : ''}>
+                <strong>{turn.speaker}</strong>: {turn.text}
               </li>
             ))}
           </ol>

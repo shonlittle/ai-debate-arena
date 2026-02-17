@@ -6,11 +6,9 @@ export type DebateRequest = {
 };
 
 export type DebateTurn = {
-  turn_index: number;
   speaker: 'persona_a' | 'persona_b';
-  persona: string;
   text: string;
-  audio_mime_type: string;
+  audio_format: 'mp3';
   audio_base64: string;
 };
 
