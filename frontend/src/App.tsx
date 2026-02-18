@@ -7,6 +7,10 @@ function toDataUrl(turn: DebateTurn): string {
   return `data:audio/${turn.audio_format};base64,${turn.audio_base64}`;
 }
 
+function toDisplayName(voiceName: string): string {
+  return voiceName.split(' - ')[0].trim();
+}
+
 export default function App() {
   const [topic, setTopic] = useState('Will AI improve education outcomes in the next decade?');
   const [turnCount, setTurnCount] = useState(6);
@@ -266,7 +270,6 @@ export default function App() {
         </div>
 
         <div className="subtitle-box">
-          <h3>Subtitle</h3>
           <p>{currentSubtitle}</p>
         </div>
 
@@ -275,7 +278,12 @@ export default function App() {
           <ol className="turns">
             {(debate?.turns ?? []).map((turn, idx) => (
               <li key={`${idx}-${turn.speaker}`} className={idx === currentTurn ? 'active' : ''}>
-                <strong>{turn.speaker === 'persona_a' ? personaAName : personaBName}</strong>: {turn.text}
+                <strong>
+                  {turn.speaker === 'persona_a'
+                    ? toDisplayName(personaAName)
+                    : toDisplayName(personaBName)}
+                </strong>
+                : {turn.text}
               </li>
             ))}
           </ol>
