@@ -2,9 +2,8 @@ import json
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, ValidationError
-
 from app.core.config import get_settings
+from pydantic import BaseModel, ValidationError
 
 XAI_CHAT_COMPLETIONS_URL = "https://api.x.ai/v1/chat/completions"
 OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -35,7 +34,7 @@ def _build_prompt(
     humor_instruction = ""
     if humor_mode:
         humor_instruction = (
-            "Style mode is HUMOR ON: write in an exaggerated, absurd, overblown, "
+            "Style mode is HUMOR ON: write in an exaggerated, absurd, overblown, silly, "
             "and clearly comedic tone while staying coherent and on-topic."
         )
 
