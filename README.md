@@ -1,8 +1,14 @@
 # ai-debate-arena
 
-AI Debate Arena MVP backend built with FastAPI, using xAI or OpenRouter for debate text and ElevenLabs for TTS.
+AI Debate Arena is a full-stack MVP that generates a debate script with an LLM and synthesizes per-turn audio with ElevenLabs.
 
-## Backend Structure
+## Stack
+- Backend: FastAPI (Python)
+- Frontend: React + Vite (TypeScript)
+- LLM Providers: xAI or OpenRouter
+- TTS: ElevenLabs
+
+## Project Structure
 
 ```text
 backend/
@@ -15,70 +21,132 @@ backend/
   tests/test_debate_api.py
   requirements.txt
   .env.example
+
+frontend/
+  src/
+  package.json
+  .env.example
+
+docker-compose.yml
+README.md
 ```
 
-## Environment
+## Features
+- Fetch available ElevenLabs voices via backend.
+- Select one voice for Persona A and a different voice for Persona B in frontend.
+- Generate alternating debate turns from LLM.
+- Synthesize each turn as MP3 and return base64 audio.
+- Play generated turns sequentially in frontend with live subtitle text.
 
-Create runtime env file from template:
+## Environment Variables
 
-```bash
-cd backend
-cp .env.example .env
-```
+`backend/.env` (copy from `backend/.env.example`):
+- `LLM_PROVIDER`: `xai` or `openrouter`
+  - Backward-compatible: if you set an xAI model name directly, it is treated as xAI mode.
+- `LLM_MODEL`: model id for selected provider.
+- `XAI_API_KEY`: required when using xAI.
+- `OPENROUTER_API_KEY`: required when using OpenRouter.
+- `ELEVENLABS_API_KEY`: required for TTS and voices listing.
+- `ELEVENLABS_VOICE_ID`: fallback voice id if per-persona voice ids are not sent.
 
-Required vars in `backend/.env`:
-- `LLM_PROVIDER` (`xai` or `openrouter`; backward-compatible with direct xAI model name)
-- `LLM_MODEL` (model id used by the selected provider)
-- `XAI_API_KEY`
-- `OPENROUTER_API_KEY`
-- `ELEVENLABS_API_KEY`
-- `ELEVENLABS_VOICE_ID` (default voice preset provided)
+`frontend/.env` (copy from `frontend/.env.example`):
+- `VITE_API_BASE_URL`: backend base URL (default in example: `http://localhost:8001`).
 
-`backend/.env.example` is template-only and contains no secrets.
-Use `XAI_API_KEY` when `LLM_PROVIDER=xai`; use `OPENROUTER_API_KEY` when `LLM_PROVIDER=openrouter`.
+Notes:
+- `.env.example` files are templates only.
+- `.env` files are git-ignored and should not be committed.
 
-## Run Backend Locally
+## Local Development (without Docker)
+
+### 1) Backend
 
 ```bash
 cd backend
 python3 -m venv ../.venv
 source ../.venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Health check:
+Backend health check:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Debate endpoint:
+### 2) Frontend
 
 ```bash
-curl -X POST http://localhost:8000/api/debate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "topic": "Should cities ban private cars downtown?",
-    "persona_a": "Voice A Name",
-    "persona_b": "Voice B Name",
-    "turns": 6,
-    "persona_a_voice_id": "voice-id-a",
-    "persona_b_voice_id": "voice-id-b"
-  }'
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
 ```
 
-Voices endpoint:
+Frontend default URL: `http://localhost:5173`
+
+## Docker Compose
+
+Run both services:
 
 ```bash
-curl http://localhost:8000/api/voices
+docker compose up --build
 ```
 
-Response shape:
+Exposed host ports:
+- Frontend: `http://localhost:5174`
+- Backend: `http://localhost:8001`
+
+Compose uses:
+- `backend/.env`
+- `frontend/.env`
+
+If you change env vars, recreate services:
+
+```bash
+docker compose up -d --build --force-recreate backend frontend
+```
+
+## API
+
+### GET `/health`
+Returns:
+
+```json
+{"status":"ok"}
+```
+
+### GET `/api/voices`
+Returns a trimmed voice list from ElevenLabs:
 
 ```json
 {
-  "topic": "...",
+  "voices": [
+    { "voice_id": "...", "name": "..." }
+  ]
+}
+```
+
+### POST `/api/debate`
+Request:
+
+```json
+{
+  "topic": "Should AI replace homework?",
+  "persona_a": "Laura",
+  "persona_b": "Adam",
+  "turns": 6,
+  "persona_a_voice_id": "voice-id-a",
+  "persona_b_voice_id": "voice-id-b"
+}
+```
+
+Response:
+
+```json
+{
+  "topic": "Should AI replace homework?",
   "turns": [
     {
       "speaker": "persona_a",
@@ -90,12 +158,44 @@ Response shape:
 }
 ```
 
-## Test
+Curl example (Docker port):
+
+```bash
+curl -X POST http://localhost:8001/api/debate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic":"Should AI replace homework?",
+    "persona_a":"Persona A",
+    "persona_b":"Persona B",
+    "turns":6,
+    "persona_a_voice_id":"voice-id-a",
+    "persona_b_voice_id":"voice-id-b"
+  }'
+```
+
+## Lint / Format / Tests
+
+Backend:
 
 ```bash
 cd backend
 source ../.venv/bin/activate
+ruff check .
+black --check .
 pytest -q
 ```
 
-The test mocks xAI and ElevenLabs calls and validates `/api/debate` response structure and base64 audio fields.
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+npm run format
+```
+
+## Troubleshooting
+- `502 Debate generation failed ... 403/404`: invalid or unavailable LLM key/model/provider combination.
+- `502 TTS failed ... 401`: invalid ElevenLabs API key in running container/process.
+- `quota_exceeded` from ElevenLabs: increase ElevenLabs usage limit/credits.
+- CORS errors from frontend: ensure backend includes your frontend origin (`5174` for Docker frontend).
