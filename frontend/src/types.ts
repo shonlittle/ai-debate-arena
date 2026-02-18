@@ -3,6 +3,7 @@ export type DebateRequest = {
   persona_a: string;
   persona_b: string;
   turns: number;
+  humor_mode?: boolean;
   persona_a_voice_id?: string;
   persona_b_voice_id?: string;
 };
