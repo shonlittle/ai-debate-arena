@@ -15,6 +15,7 @@ class DebateRequest(BaseModel):
     persona_a: str = Field(..., min_length=2, max_length=80)
     persona_b: str = Field(..., min_length=2, max_length=80)
     turns: int = Field(6, ge=2, le=20)
+    humor_mode: bool = False
     persona_a_voice_id: str | None = Field(default=None, min_length=2, max_length=100)
     persona_b_voice_id: str | None = Field(default=None, min_length=2, max_length=100)
 
@@ -58,6 +59,7 @@ async def debate(payload: DebateRequest) -> DebateResponse:
             persona_a=payload.persona_a,
             persona_b=payload.persona_b,
             turns=payload.turns,
+            humor_mode=payload.humor_mode,
         )
     except (httpx.HTTPError, RuntimeError) as exc:
         raise HTTPException(status_code=502, detail=f"Debate generation failed: {exc}") from exc

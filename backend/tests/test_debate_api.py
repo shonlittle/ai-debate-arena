@@ -12,8 +12,10 @@ async def _fake_generate_debate_turns(
     persona_a: str,
     persona_b: str,
     turns: int,
+    humor_mode: bool = False,
 ) -> list[dict[str, str]]:
     del topic
+    del humor_mode
     output: list[dict[str, str]] = []
     for i in range(turns):
         if i % 2 == 0:
@@ -49,6 +51,7 @@ def test_debate_endpoint_returns_required_shape(monkeypatch) -> None:
             "persona_a": "Scientist",
             "persona_b": "Economist",
             "turns": 6,
+            "humor_mode": True,
             "persona_a_voice_id": "voice-a",
             "persona_b_voice_id": "voice-b",
         },
