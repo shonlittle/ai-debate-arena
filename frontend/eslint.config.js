@@ -22,6 +22,11 @@ export default [
         window: 'readonly',
         document: 'readonly',
         console: 'readonly',
+        fetch: 'readonly',
+        Audio: 'readonly',
+        HTMLElement: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
       },
     },
     plugins: {
@@ -32,6 +37,7 @@ export default [
     rules: {
       ...tseslint.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
+      'no-undef': 'off',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
