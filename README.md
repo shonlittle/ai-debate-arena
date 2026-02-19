@@ -2,6 +2,9 @@
 
 AI Debate Arena is a full-stack MVP that generates a debate script with an LLM and synthesizes per-turn audio with ElevenLabs.
 
+## Demo
+- Loom walkthrough: [AI Debate Arena Live Demo](https://www.loom.com/share/c76d4e1bc28a42a4af23a8e2b2e06326)
+
 ## Stack
 - Backend: FastAPI (Python)
 - Frontend: React + Vite (TypeScript)
