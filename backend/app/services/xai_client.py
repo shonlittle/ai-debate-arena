@@ -2,9 +2,8 @@ import json
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, ValidationError
-
 from app.core.config import get_settings
+from pydantic import BaseModel, ValidationError
 
 XAI_CHAT_COMPLETIONS_URL = "https://api.x.ai/v1/chat/completions"
 OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -19,11 +18,24 @@ class _DebateModel(BaseModel):
     turns: list[_TurnModel]
 
 
-def _build_prompt(topic: str, persona_a: str, persona_b: str, turns: int, retry: bool) -> str:
+def _build_prompt(
+    topic: str,
+    persona_a: str,
+    persona_b: str,
+    turns: int,
+    humor_mode: bool,
+    retry: bool,
+) -> str:
     retry_instruction = ""
     if retry:
         retry_instruction = (
             "Your previous response was invalid. Return only valid JSON with the required shape."
+        )
+    humor_instruction = ""
+    if humor_mode:
+        humor_instruction = (
+            "Style mode is HUMOR ON: write in an exaggerated, absurd, overblown, silly, "
+            "and clearly comedic tone while staying coherent and on-topic."
         )
 
     return (
@@ -33,6 +45,7 @@ def _build_prompt(topic: str, persona_a: str, persona_b: str, turns: int, retry:
         "Return JSON object with key 'turns', containing a list of objects "
         "with keys 'speaker' and 'text'. "
         "Speaker values must be exactly 'persona_a' or 'persona_b'. No markdown, no extra keys. "
+        f"{humor_instruction} "
         f"{retry_instruction}"
     )
 
@@ -64,6 +77,7 @@ async def generate_debate_turns(
     persona_a: str,
     persona_b: str,
     turns: int,
+    humor_mode: bool = False,
 ) -> list[dict[str, str]]:
     settings = get_settings()
     if settings.llm_provider == "openrouter":
@@ -105,6 +119,7 @@ async def generate_debate_turns(
                             persona_a=persona_a,
                             persona_b=persona_b,
                             turns=turns,
+                            humor_mode=humor_mode,
                             retry=attempt == 1,
                         ),
                     },

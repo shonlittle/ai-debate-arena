@@ -34,6 +34,7 @@ README.md
 ## Features
 - Fetch available ElevenLabs voices via backend.
 - Select one voice for Persona A and a different voice for Persona B in frontend.
+- Optional humor mode toggle for overblown, exaggerated comedic debates.
 - Generate alternating debate turns from LLM.
 - Synthesize each turn as MP3 and return base64 audio.
 - Play generated turns sequentially in frontend with live subtitle text.
@@ -137,6 +138,7 @@ Request:
   "persona_a": "Laura",
   "persona_b": "Adam",
   "turns": 6,
+  "humor_mode": true,
   "persona_a_voice_id": "voice-id-a",
   "persona_b_voice_id": "voice-id-b"
 }
@@ -168,6 +170,7 @@ curl -X POST http://localhost:8001/api/debate \
     "persona_a":"Persona A",
     "persona_b":"Persona B",
     "turns":6,
+    "humor_mode":true,
     "persona_a_voice_id":"voice-id-a",
     "persona_b_voice_id":"voice-id-b"
   }'

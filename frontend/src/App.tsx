@@ -14,6 +14,7 @@ function toDisplayName(voiceName: string): string {
 export default function App() {
   const [topic, setTopic] = useState('Will AI improve education outcomes in the next decade?');
   const [turnCount, setTurnCount] = useState(6);
+  const [humorMode, setHumorMode] = useState(false);
 
   const [voices, setVoices] = useState<Voice[]>([]);
   const [personaAVoiceId, setPersonaAVoiceId] = useState('');
@@ -128,6 +129,7 @@ export default function App() {
       persona_a: personaAName,
       persona_b: personaBName,
       turns: turnCount,
+      humor_mode: humorMode,
       persona_a_voice_id: personaAVoiceId,
       persona_b_voice_id: personaBVoiceId,
     };
@@ -231,6 +233,15 @@ export default function App() {
               step={1}
               value={turnCount}
               onChange={(e) => setTurnCount(Number(e.target.value))}
+            />
+          </label>
+
+          <label className="toggle-row">
+            Humor Mode
+            <input
+              type="checkbox"
+              checked={humorMode}
+              onChange={(e) => setHumorMode(e.target.checked)}
             />
           </label>
 
